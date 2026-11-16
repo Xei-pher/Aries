@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d12">
+  <title>Aries Forensics Console</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40"><path d="M20 4 33 11v18L20 36 7 29V11Z"/><path d="M14 27 20 12l6 15M16.5 22h7"/></svg>
+        </div>
+        <div><strong>ARIES</strong><span>Forensics Console</span></div>
+      </div>
+
+      <button class="primary wide" id="newCaseButton"><span>＋</span> New case</button>
+
+      <div class="sidebar-label">Cases</div>
+      <nav id="caseList" class="case-list" aria-label="Cases"></nav>
+
+      <div class="sidebar-footer">
+        <div class="engine-state"><span class="status-dot" id="engineDot"></span><div><strong id="engineLabel">Checking engine</strong><small id="engineVersion">Local service</small></div></div>
+        <button class="model-state" id="modelButton" type="button">
+          <span>AI MODEL</span>
+          <strong id="modelName">Checking configuration…</strong>
+          <small id="modelInheritance">Single-model workflow</small>
+        </button>
+        <div class="privacy-note"><span>⌂</span> Evidence remains on this workstation</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">ACTIVE INVESTIGATION</div>
+          <h1 id="caseTitle">Select a case</h1>
+        </div>
+        <div class="top-actions">
+          <span class="case-status" id="caseStatus">No case</span>
+          <button class="ghost" id="assistantButton" disabled>Ask Aries</button>
+          <button class="ghost" id="terminalButton" disabled>Activity</button>
+          <button class="ghost" id="bundleButton" disabled>Export case</button>
+          <button class="danger-button hidden" id="stopButton">Stop</button>
+          <button class="danger-button" id="deleteCaseButton" disabled>Delete</button>
+          <button class="primary" id="runButton" disabled>Run investigation</button>
+        </div>
+      </header>
+
+      <section id="emptyState" class="empty-state">
+        <div class="empty-orbit"><span>✦</span></div>
+        <p class="eyebrow">EVIDENCE-LED. AUDITABLE. LOCAL.</p>
+        <h2>Turn forensic artifacts into a defensible investigation.</h2>
+        <p>Create a case, upload disk images, memory captures, registry hives, event logs, or triage collections. Aries inventories the evidence, follows material leads, challenges its own conclusions, and produces a reviewable incident report.</p>
+        <button class="primary" id="emptyNewCase">Create your first case</button>
+      </section>
+
+      <section id="caseWorkspace" class="workspace hidden">
+        <div class="metric-grid">
+          <article class="metric"><span>Evidence sources</span><strong id="evidenceMetric">0</strong><small id="evidenceSize">No artifacts registered</small></article>
+          <article class="metric"><span>Material leads</span><strong id="leadMetric">0</strong><small id="leadSummary">0 high priority</small></article>
+          <article class="metric"><span>Processing</span><strong id="phaseMetric">0%</strong><small id="phaseSummary">Not started</small></article>
+          <article class="metric accent"><span>Report status</span><strong id="reportMetric">Pending</strong><small id="reportSummary">Evidence gate not reached</small></article>
+        </div>
+
+        <div class="workspace-grid">
+          <section class="panel upload-panel">
+            <div class="panel-heading"><div><p class="eyebrow">CASE INTAKE</p><h2>Evidence</h2></div><button class="text-button" id="addEvidenceButton">Add artifacts</button></div>
+            <div class="dropzone" id="dropzone" tabindex="0">
+              <input id="fileInput" type="file" multiple hidden>
+              <div class="upload-icon">⇧</div>
+              <strong>Drop forensic artifacts here</strong>
+              <span>E01/EWF, RAW, VHDX, EVTX, registry, Prefetch, archives, CSV/JSON, and folders</span>
+              <small>Files stream directly to the local Aries evidence store.</small>
+            </div>
+            <div id="uploadQueue" class="upload-queue"></div>
+            <button class="secondary wide hidden" id="registerButton">Register uploaded evidence</button>
+          </section>
+
+          <section class="panel pipeline-panel">
+            <div class="panel-heading"><div><p class="eyebrow">INVESTIGATION ENGINE</p><h2>Pipeline</h2></div><span class="live-chip hidden" id="liveChip"><i></i> Running</span></div>
+            <div class="case-error hidden" id="caseError"></div>
+            <div id="phaseList" class="phase-list"></div>
+            <pre id="liveLog" class="live-log hidden"></pre>
+          </section>
+        </div>
+
+        <section class="panel">
+          <div class="panel-heading tabs-heading">
+            <div class="tabs" role="tablist">
+              <button class="tab active" data-tab="leads">Leads</button>
+              <button class="tab" data-tab="timeline">Timeline</button>
+              <button class="tab" data-tab="findings">Findings</button>
+              <button class="tab" data-tab="report">Report</button>
+            </div>
+            <div class="table-filter"><span>⌕</span><input id="tableSearch" placeholder="Filter current view"></div>
+          </div>
+          <div id="tabContent" class="tab-content"></div>
+        </section>
+      </section>
+    </main>
+
+    <section class="terminal-drawer" id="terminalDrawer" aria-label="Case activity and command output">
+      <div class="terminal-header">
+        <div><p class="eyebrow">LIVE CASE AUDIT</p><h2>Under the hood</h2><small id="terminalStatus">Waiting for activity</small></div>
+        <div class="terminal-actions"><button class="danger-button hidden" id="terminalStopButton" type="button">Stop investigation</button><button class="ghost" id="downloadDiagnostics" type="button">Download diagnostics</button><button class="ghost" id="refreshTerminal" type="button">Refresh</button><button class="icon-button" id="closeTerminal" type="button" aria-label="Close activity view">×</button></div>
+      </div>
+      <pre id="terminalOutput" class="terminal-output">No activity has been recorded for this case yet.</pre>
+      <div class="terminal-note">Commands are recorded when launched and when they exit. The redacted Hermes AI transcript and usage/cost record are attached after the model turn completes.</div>
+    </section>
+
+    <aside class="assistant-panel" id="assistantPanel">
+      <div class="assistant-header"><div><p class="eyebrow">CASE COPILOT</p><h2>Ask Aries</h2></div><button class="icon-button" id="closeAssistant" aria-label="Close assistant">×</button></div>
+      <div class="assistant-context"><span>◎</span><div><strong id="assistantCaseName">Active case evidence lake</strong><small id="assistantLakeStatus">The index builds automatically when you ask a question.</small></div></div>
+      <div class="chat" id="chatMessages"><div class="assistant-message">Ask about a process, account, timestamp, IOC, contradiction, or report conclusion. I will search only the active case and cite the exact case files used.</div></div>
+      <form id="assistantForm" class="assistant-form"><textarea id="assistantInput" rows="3" placeholder="What connects the suspicious process to the network activity?"></textarea><button class="primary" type="submit">Ask</button></form>
+    </aside>
+    <button class="assistant-fab" id="assistantFab" aria-label="Open case assistant">✦</button>
+  </div>
+
+  <dialog id="newCaseDialog" class="modal">
+    <form id="newCaseForm">
+      <div class="modal-heading"><div><p class="eyebrow">NEW INVESTIGATION</p><h2>Create a case</h2></div><button class="icon-button" id="closeNewCase" type="button" aria-label="Close">×</button></div>
+      <label>Case name<input id="caseNameInput" required maxlength="80" pattern="[A-Za-z0-9._-]+" placeholder="victim-2026-001"><small>Letters, numbers, dots, underscores, and hyphens only.</small></label>
+      <label>Description<textarea id="caseDescriptionInput" rows="3" maxlength="2000" placeholder="Suspected endpoint compromise requiring disk and memory review"></textarea></label>
+      <div class="modal-actions"><button class="ghost" id="cancelNewCase" type="button">Cancel</button><button class="primary" type="submit" id="createCaseSubmit">Create case</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="investigationDialog" class="modal investigation-modal">
+    <form id="investigationForm">
+      <div class="modal-heading"><div><p class="eyebrow">OPTIONAL CASE BRIEF</p><h2>What should Aries know?</h2></div><button class="icon-button" id="closeInvestigationDialog" type="button" aria-label="Close">×</button></div>
+      <p>Add scope, known facts, exclusions, context, or specific questions. Leave it empty for a general investigation. This is saved with the case and available to its assistant.</p>
+      <label>Investigation request<textarea id="investigationInstructions" rows="8" maxlength="12000" placeholder="Example: Focus on activity around 8 August. course_files is legitimate training material. Determine initial access, persistence, network infrastructure, and what evidence supports each conclusion."></textarea><small>Optional · maximum 12,000 characters · evidence and safety requirements still apply</small></label>
+      <div class="brief-examples"><span>Useful details</span><small>Incident time window · known-good activity · suspected users or hosts · required questions · artifacts to prioritize · exclusions</small></div>
+      <div class="modal-actions"><button class="ghost" id="cancelInvestigation" type="button">Cancel</button><button class="primary" type="submit">Start investigation</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="modelDialog" class="modal">
+    <div class="model-dialog-body">
+      <div class="modal-heading"><div><p class="eyebrow">HERMES PROFILE</p><h2>AI model</h2></div><button class="icon-button" id="closeModelDialog" aria-label="Close">×</button></div>
+      <div class="model-detail"><span>Primary model</span><strong id="modelDialogPrimary">Not configured</strong></div>
+      <div class="model-detail"><span>Workflow</span><strong id="modelDialogWorkflow">Single model</strong></div>
+      <p class="model-help">Aries now uses one primary model for the complete investigation. To switch models, stop any running investigation and run:</p>
+      <pre class="command-block">hermes -p aries model</pre>
+      <div class="modal-actions"><button class="ghost" id="copyModelCommands" type="button">Copy commands</button><button class="secondary" id="refreshModelButton" type="button">Refresh status</button></div>
+    </div>
+  </dialog>
+
+  <dialog id="deleteCaseDialog" class="modal danger-modal">
+    <form id="deleteCaseForm">
+      <div class="modal-heading"><div><p class="eyebrow">DESTRUCTIVE ACTION</p><h2>Delete case and evidence</h2></div><button class="icon-button" id="closeDeleteCase" type="button" aria-label="Close">×</button></div>
+      <p>This permanently removes the case directory, uploaded evidence, parser output, findings, reports, AI transcript, and matching web logs. It cannot be undone.</p>
+      <label>Type <strong id="deleteCaseExpected"></strong> to confirm<input id="deleteCaseConfirmation" required autocomplete="off"></label>
+      <div class="modal-actions"><button class="ghost" id="cancelDeleteCase" type="button">Cancel</button><button class="danger-button" type="submit">Delete everything</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/assets/app.js"></script>
+</body>
+</html>
